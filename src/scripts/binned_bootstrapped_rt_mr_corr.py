@@ -34,6 +34,7 @@ def bedtools_operation_cmd( query_regions_path, query_regions_file,\
     if files_are_sorted: cmd.append('-sorted')
     return cmd
 
+#to-do: make sure this function works as expected
 def total_size_of_regions(query_regions_path, query_regions_file):
     size_cmd = ['awk','{SUM += $3-$2} END {print SUM}']
     size_cmd.append(query_regions_path + query_regions_file)
@@ -103,7 +104,7 @@ def regions_file_name(regions_name):
     file_suffix = '.bed'
     return file_prefix + regions_name + file_suffix
 
-#note: mutations are sites
+#note: mutations and polymorphisms are point sites in the genome
 def sites_file_name(sites_name):
     file_suffix = '.bed'
     return sites_name + file_suffix
@@ -167,6 +168,7 @@ for rt_state in list_of_rt_states:
                                         analysis_path,\
                                         rt_binned_query_regions_file)
     print 'saving rt binned query regions file for ' + rt_state
+    #to-do: make sure this function works as expected
     total_size_of_rt_binned_regs = total_size_of_regions(analysis_path,\
                                                 rt_binned_query_regions_file)
     no_of_muts_in_rt_binned_regs = no_of_mutations_in_regions(analysis_path,\
