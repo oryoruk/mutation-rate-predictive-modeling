@@ -120,7 +120,7 @@ def bin_rt_state_of_query_regions():
     pass
 
 def no_of_sites_in_region(sites, reg_chrom, reg_chrom_start, reg_chrom_end):
-    return len(sites[(sites.chrom == reg_chrom) & (sites.chrom_start>=reg_chrom_start)& (sites.chrom_end<=reg_chrom_end)].index)
+    return len(sites[(sites.chrom == reg_chrom) & (sites.chrom_start>=reg_chrom_start)& (sites.chrom_end<reg_chrom_end)].index)
 
 #to-do: currently this is hardcoded, allow more states
 #global variables:
