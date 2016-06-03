@@ -134,7 +134,7 @@ list_of_rt_states = ['s'+str(i+1) for i in range(no_of_rt_states)]
 #to-do: allow custom output folder
 #analysis:
 current_dir = './'
-output_dir = './../../output/initial_analysis/binned_rt_sr_corr/'
+output_dir = './../../output/initial_analysis/rt_sr_corr/'
 input_dir = './../../data/formatted_regions_sites/'
 
 initial_regions = sys.argv[1]
