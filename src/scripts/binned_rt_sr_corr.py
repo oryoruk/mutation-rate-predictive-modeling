@@ -18,10 +18,8 @@ from collections import defaultdict
 #from datetime import datetime
 from random import randint
 import warnings
+import time
 import pickle
-
-
-pd.options.display.mpl_style = 'default'
 
 
 #functions:
@@ -119,23 +117,41 @@ def filter_initial_regions():
 def bin_rt_state_of_query_regions():
     pass
 
+"""
 def no_of_sites_in_region(sites, reg_chrom, reg_chrom_start, reg_chrom_end):
-    return len(sites[(sites.chrom == reg_chrom) & (sites.chrom_start>=reg_chrom_start)& (sites.chrom_end<reg_chrom_end)].index)
+    return len(sites[(sites.chrom == reg_chrom) & (sites.chrom_start>=reg_chrom_start)& (sites.chrom_end<=reg_chrom_end)].index)
+"""
 
-#to-do: currently this is hardcoded, allow more states
+#this function is updated to handle regions from multiple chromosomes
+#function assumes chromosome number to be of type string
+def no_of_sites_in_window(sites, reg_chrom, reg_chrom_start, reg_chrom_end, chrom_order, window_starts_in_prev_chrom = False):
+    if window_starts_in_prev_chrom:
+        #no of sites in this chromosome
+        no_of_sites_in_cur_chrom = len(sites[(sites.chrom == reg_chrom) & (sites.chrom_end<=reg_chrom_end)].index)
+        prev_chrom = chrom_order[chrom_order.index(str(reg_chrom))-1]
+        #no of sites in next chromosome
+        no_of_sites_in_prev_chrom = len(sites[(sites.chrom == prev_chrom) & (sites.chrom_start>=reg_chrom_start)].index)
+        return no_of_sites_in_prev_chrom + no_of_sites_in_cur_chrom
+    else:
+        return len(sites[(sites.chrom == reg_chrom) & (sites.chrom_start>=reg_chrom_start)& (sites.chrom_end<=reg_chrom_end)].index)
+
+
 #global variables:
 no_of_rt_states = 4
 list_of_rt_states = ['s'+str(i+1) for i in range(no_of_rt_states)]
-#query_regions_prepared = True
+#order of chromosomes in bed files:
+#order of chromosomes in bed files:
+chrom_order = [str(c) for c in range(1,23)]+ ['X','Y']
+chrom_order.sort()
 
-#no_of_resampling = 10**3
-#resampling_ratio = 0.9
 
 #to-do: allow custom output folder
-#analysis:
-current_dir = './'
 output_dir = './../../output/initial_analysis/binned_rt_sr_corr/'
 input_dir = './../../data/formatted_regions_sites/'
+
+#get user input
+#example command:
+#python binned_rt_sr_corr.py whole acc_nc_auto koren_rt snp_1kg_eur 50000
 
 initial_regions = sys.argv[1]
 filters = sys.argv[2]
@@ -146,54 +162,65 @@ site_dataset = sys.argv[4]
 site_dataset_file = sites_file_name(site_dataset)
 win_size = int(sys.argv[5])
 
-
 """
 e.g.:
 initial_regions: 'whole'
 filters: 'acc_nc_auto'
-query_regions = 'whole__acc_nc_auto'
-rt_regions = 'uva_rt'
-site_dataset = 'snp_pg_jw'
+query_regions: 'whole__acc_nc_auto'
+rt_regions: 'koren_rt'
+site_dataset:'snp_1kg_eur'
+
 """
-analysis_folder_suffix =  ''
+
+analysis_folder_suffix = ''
 try:
     analysis_folder_suffix = sys.argv[6]
 except:
     pass
-
 analysis_folder = '__'.join([initial_regions, filters, \
                              rt_regions, site_dataset])
+#create analysis folder
 if analysis_folder_suffix:  analysis_folder += '__' + analysis_folder_suffix
 analysis_dir = output_dir + analysis_folder + '/'
 print 'creating analysis folder: ' + analysis_folder
 subprocess.call('mkdir ' + analysis_dir, shell=True)
 
+"""
+e.g.:
+analysis_folder: 'whole__acc_nc_auto__koren_rt__snp_1kg_eur'
 
-#to-do
-#if query_regions_prepared is False:
-#    filter_initial_regions(query_regions_file)
+"""
 
-
-total_no_of_muts = total_size_of_regions(input_dir, \
-                                         site_dataset_file)
-total_sizes_of_all_rt_binned_regs = []
 no_of_muts_in_all_rt_binned_regs = []
+total_no_of_sites = total_size_of_regions(input_dir, \
+                                          site_dataset_file)
+print 'total number of sites: ' + str(total_no_of_sites)
+total_sizes_of_all_rt_binned_regs = []
 
-#binning the regions into n subsets for each rt state
-#saving the resulting subsets in respective files
-#measuring the total size of each subset
-#counting the corresponding mutations in each subset
-#note-to-self: might want to keep these regions ready for the script
+#for each rt state: s1 to s4
 for rt_state in list_of_rt_states:
-    print 'intersecting with ' + rt_state
+
+
+    print 'intersecting query regions with ' + rt_state
     rt_state_regs_file = regions_file_name(rt_regions.strip('rt') + rt_state)
     rt_binned_query_regions_file = regions_file_name(query_regions + '__'\
                                         + rt_regions.strip('rt') + rt_state)
+    #using bedtools to find the intersections:
     bedtools_intersect_and_save_results(input_dir, query_regions_file, \
                                         input_dir, rt_state_regs_file, \
                                         analysis_dir, \
                                         rt_binned_query_regions_file)
-    print 'saving rt binned query regions file for ' + rt_state
+    #example file name: 'reg_whole__acc_nc_auto__koren_s1.bed'
+    print 'saving rt binned query regions for ' + rt_state
+    #now intersect these rt binned query regions with sites
+    sites_in_rt_binned_query_regions_file = sites_file_name(site_dataset + '__' + query_regions + '__' \
+                                                     + rt_regions.strip('rt') + rt_state)
+    bedtools_intersect_and_save_results(analysis_dir, rt_binned_query_regions_file, \
+                                        input_dir, site_dataset_file, \
+                                        analysis_dir, \
+                                        sites_in_rt_binned_query_regions_file)
+    print 'saving sites that fall into rt binned query regions for ' + rt_state
+    print total_size_of_regions(analysis_dir, sites_in_rt_binned_query_regions_file)
     total_size_of_rt_binned_regs = total_size_of_regions(analysis_dir, \
                                                          rt_binned_query_regions_file)
     no_of_muts_in_rt_binned_regs = no_of_mutations_in_regions(analysis_dir, \
@@ -203,13 +230,83 @@ for rt_state in list_of_rt_states:
     total_sizes_of_all_rt_binned_regs.append(total_size_of_rt_binned_regs)
     no_of_muts_in_all_rt_binned_regs.append(no_of_muts_in_rt_binned_regs)
 
-print total_no_of_muts
+    #time.sleep(5)
+    # forcing the dtype of chrom to be of object
+    rt_query_sites = pd.read_csv(analysis_dir + sites_in_rt_binned_query_regions_file, delimiter='\t', header=None,
+                                 names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object})
+    rt_query_regs = pd.read_csv(analysis_dir + rt_binned_query_regions_file, delimiter='\t', header=None,
+                                names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object})
+
+    cur_win_chrom = '1'
+    cur_win_len, cur_win_start, cur_win_end = [0] * 3
+    win_site_counts = []
+    window_starts_in_prev_chrom = False
+
+    for i, reg in rt_query_regs.iterrows():
+
+        cur_reg_len = reg.chrom_end - reg.chrom_start
+        if reg.chrom != cur_win_chrom:
+            cur_win_chrom = reg.chrom
+            window_starts_in_prev_chrom = True
+
+        # we are extending the current window
+        # there are 3 scenarios
+        # most likely scenario: if the current region length is not exceeding our window size:
+        if cur_reg_len <= (win_size - cur_win_len):
+            # add the current region to the current window
+            cur_win_len += cur_reg_len
+            # update the end position of current window
+            cur_win_end = reg.chrom_end
+        # else if the current region is exceeding our window size:
+        else:
+            # add the current region to the current window
+            # update the end position of current window
+            cur_win_end = reg.chrom_start + (win_size - cur_win_len)
+            # count sites in the current window
+            # print cur_win_chrom, cur_win_start, cur_win_end, window_starts_in_prev_chrom
+            win_site_count = no_of_sites_in_window(rt_query_sites, cur_win_chrom, cur_win_start, cur_win_end,
+                                                   chrom_order, window_starts_in_prev_chrom)
+            # if the window started in previous chromosome update it for next window:
+            if window_starts_in_prev_chrom:
+                # print win_site_count
+                window_starts_in_prev_chrom = False
+
+            # append number of sites in this window
+            win_site_counts.append(win_site_count)
+
+            # if (len(win_site_counts) %100 )== 0:
+            #   print len(win_site_counts)
+
+
+
+            # print(win_site_count)
+
+            # to-do: current region might be even larger than the win_size, tackle that scenario
+
+            # update cur_win_len for next iteration:
+            cur_win_len = cur_reg_len - (win_size - cur_win_len)
+            # update cur_win_start and cur_win_end for next iteration:
+            cur_win_start = cur_win_end
+            cur_win_end = reg.chrom_end
+
+    # pickle win_site_counts + rt_state + win_size
+    win_site_counts_filename = analysis_dir + 'win_site_counts_' + str(win_size) + '_' + rt_state + '.pickle'
+    fileObject = open(win_site_counts_filename, 'wb')
+    pickle.dump(win_site_counts, fileObject)
+    fileObject.close()
+    print 'site counts for windows saved for rt state ' + rt_state
+
+    # sanity check
+    print len(win_site_counts)
+
 print total_sizes_of_all_rt_binned_regs
 print no_of_muts_in_all_rt_binned_regs
 
 
-sites  = pd.read_csv(input_dir + site_dataset_file,delimiter = '\t',header=None, names = ['chrom','chrom_start','chrom_end'] )
+"""
+#OLD AND SLOW VERSION FOR BINNED ANALYSIS:
 
+sites  = pd.read_csv(input_dir + site_dataset_file,delimiter = '\t',header=None, names = ['chrom','chrom_start','chrom_end'] )
 
 for rt_state in list_of_rt_states:
     #for each rt
@@ -250,3 +347,5 @@ for rt_state in list_of_rt_states:
     fileObject = open(win_site_counts_filename, 'wb')
     pickle.dump(win_site_counts, fileObject)
     fileObject.close()
+
+"""
