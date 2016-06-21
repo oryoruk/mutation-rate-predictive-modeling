@@ -197,6 +197,13 @@ query_regions_file = regions_file_name(query_regions)
 site_dataset_file = sites_file_name(site_dataset)
 win_size = 50000
 
+
+
+#e.g.:
+#analysis_folder: 'whole__acc_nc_auto__koren_rt__snp_1kg_eur'
+
+
+
 """
 
 #create analysis folder
@@ -205,11 +212,7 @@ analysis_dir = output_dir + analysis_folder + '/'
 print 'creating analysis folder: ' + analysis_folder
 subprocess.call('mkdir ' + analysis_dir, shell=True)
 
-"""
-e.g.:
-analysis_folder: 'whole__acc_nc_auto__koren_rt__snp_1kg_eur'
 
-"""
 
 no_of_muts_in_all_rt_binned_regs = []
 total_no_of_sites = total_size_of_regions(input_dir, \
@@ -321,51 +324,3 @@ for rt_state in list_of_rt_states:
 
 print total_sizes_of_all_rt_binned_regs
 print no_of_muts_in_all_rt_binned_regs
-
-
-"""
-#OLD AND SLOW VERSION FOR BINNED ANALYSIS:
-
-sites  = pd.read_csv(input_dir + site_dataset_file,delimiter = '\t',header=None, names = ['chrom','chrom_start','chrom_end'] )
-
-for rt_state in list_of_rt_states:
-    #for each rt
-    rt_binned_query_regions_file = regions_file_name(query_regions + '__' \
-                                                     + rt_regions.strip('rt') + rt_state)
-    rt_binned_regs = pd.read_csv(analysis_dir+rt_binned_query_regions_file,delimiter = '\t',header=None, names = ['chrom','chrom_start','chrom_end'] )
-    cur_win_len = 0
-    cur_win_site_count = 0
-    win_site_counts = []
-    for i, reg in enumerate(rt_binned_regs.iterrows()):
-        cur_reg_len = reg[1].chrom_end - reg[1].chrom_start
-        #we are extending theo current window
-        #if the current region length is not exceeding our window size:
-        if cur_reg_len <= (win_size-cur_win_len):
-            cur_win_len += cur_reg_len
-            #count the number of sites that fall within current region
-            cur_reg_site_count = no_of_sites_in_region(sites, reg[1].chrom, reg[1].chrom_start, reg[1].chrom_end)
-            cur_win_site_count += cur_reg_site_count
-        #to-do: here I am assuming the regions cannot exceed more than 1 windows. i.e. reg_size << window_size
-        #else if the current region is exceeding our window size:
-        else:
-            #count sites in first portion of current region
-            cur_reg_first_portion_site_count = no_of_sites_in_region(sites, reg[1].chrom, reg[1].chrom_start,reg[1].chrom_start+ (win_size-cur_win_len))
-            cur_win_site_count += cur_reg_first_portion_site_count
-            win_site_counts.append(cur_win_site_count)
-
-            #to-do: current region might be even larger than the win_size, tackle that scenario
-
-            #update cur_win_len for next iteration:
-            cur_win_len = cur_reg_len - (win_size-cur_win_len)
-
-            #update cur_win_site_count for next iteration:
-            cur_reg_second_portion_site_count = no_of_sites_in_region(sites, reg[1].chrom, reg[1].chrom_start+ (win_size-cur_win_len),reg[1].chrom_end)
-            cur_win_site_count = cur_reg_second_portion_site_count
-    #pickle win_site_counts + rt_state + win_size
-    print 'site counts for windows saved for rt state ' + rt_state
-    win_site_counts_filename = output_dir + 'win_site_counts_'+str(win_size)+'_' +rt_state+'.pickle'
-    fileObject = open(win_site_counts_filename, 'wb')
-    pickle.dump(win_site_counts, fileObject)
-    fileObject.close()
-
-"""
