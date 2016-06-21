@@ -139,6 +139,7 @@ def no_of_sites_in_window(sites, reg_chrom, reg_chrom_start, reg_chrom_end, chro
 #global variables:
 no_of_rt_states = 4
 list_of_rt_states = ['s'+str(i+1) for i in range(no_of_rt_states)]
+#list_of_rt_states = ['s4']
 #order of chromosomes in bed files:
 #order of chromosomes in bed files:
 chrom_order = [str(c) for c in range(1,23)]+ ['X','Y']
@@ -148,6 +149,10 @@ chrom_order.sort()
 #to-do: allow custom output folder
 output_dir = './../../output/initial_analysis/binned_rt_sr_corr/'
 input_dir = './../../data/formatted_regions_sites/'
+
+
+
+
 
 #get user input
 #example command:
@@ -162,15 +167,9 @@ site_dataset = sys.argv[4]
 site_dataset_file = sites_file_name(site_dataset)
 win_size = int(sys.argv[5])
 
-"""
-e.g.:
-initial_regions: 'whole'
-filters: 'acc_nc_auto'
-query_regions: 'whole__acc_nc_auto'
-rt_regions: 'koren_rt'
-site_dataset:'snp_1kg_eur'
 
-"""
+
+
 
 analysis_folder_suffix = ''
 try:
@@ -179,6 +178,27 @@ except:
     pass
 analysis_folder = '__'.join([initial_regions, filters, \
                              rt_regions, site_dataset])
+
+
+"""
+#e.g.
+
+initial_regions =  'whole'
+filters = 'acc_nc_auto'
+query_regions = 'whole__acc_nc_auto'
+rt_regions = 'koren_rt'
+site_dataset = 'snp_1kg_eur'
+analysis_folder_suffix = ''
+analysis_folder = '__'.join([initial_regions, filters, \
+                             rt_regions, site_dataset])
+
+query_regions = initial_regions + '__' + filters
+query_regions_file = regions_file_name(query_regions)
+site_dataset_file = sites_file_name(site_dataset)
+win_size = 50000
+
+"""
+
 #create analysis folder
 if analysis_folder_suffix:  analysis_folder += '__' + analysis_folder_suffix
 analysis_dir = output_dir + analysis_folder + '/'
