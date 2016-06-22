@@ -21,7 +21,6 @@ import warnings
 import time
 import pickle
 
-
 #functions:
 def bedtools_operation_cmd( query_regions_path, query_regions_file,\
                             regions_to_apply_path, regions_to_apply_file,\
@@ -225,9 +224,9 @@ for rt_state in list_of_rt_states:
 
 
     print 'intersecting query regions with ' + rt_state
-    rt_state_regs_file = regions_file_name(rt_regions.strip('rt') + rt_state)
+    rt_state_regs_file = regions_file_name(rt_state + rt_regions.strip('rt') )
     rt_binned_query_regions_file = regions_file_name(query_regions + '__'\
-                                        + rt_regions.strip('rt') + rt_state)
+                                        +rt_state+ rt_regions.strip('rt'))
     #using bedtools to find the intersections:
     bedtools_intersect_and_save_results(input_dir, query_regions_file, \
                                         input_dir, rt_state_regs_file, \
@@ -237,7 +236,7 @@ for rt_state in list_of_rt_states:
     print 'saving rt binned query regions for ' + rt_state
     #now intersect these rt binned query regions with sites
     sites_in_rt_binned_query_regions_file = sites_file_name(site_dataset + '__' + query_regions + '__' \
-                                                     + rt_regions.strip('rt') + rt_state)
+                                                     +rt_state+ rt_regions.strip('rt'))
     bedtools_intersect_and_save_results(analysis_dir, rt_binned_query_regions_file, \
                                         input_dir, site_dataset_file, \
                                         analysis_dir, \
