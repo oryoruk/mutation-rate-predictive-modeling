@@ -141,17 +141,14 @@ def avg_rt_score_in_window(measurements, reg_chrom, reg_chrom_start, reg_chrom_e
                            window_starts_in_prev_chrom=False):
     if window_starts_in_prev_chrom:
         # no of sites in this chromosome
-        avg_rt_score_in_cur_chrom = np.mean(
-            measurements[(measurements.chrom == reg_chrom) & (measurements.chrom_end <= reg_chrom_end)].rt_score)
+        avg_rt_score_in_cur_chrom = np.mean(measurements[(measurements.chrom == reg_chrom) & (measurements.chrom_end <= reg_chrom_end)].rt_score)
         prev_chrom = chrom_order[chrom_order.index(str(reg_chrom)) - 1]
         # no of sites in next chromosome
         avg_rt_score_in_prev_chrom = np.mean(measurements[(measurements.chrom == prev_chrom) & (
         measurements.chrom_start >= reg_chrom_start)].rt_score)
-        return no_of_sites_in_prev_chrom + no_of_sites_in_cur_chrom
+        return avg_rt_score_in_cur_chrom + avg_rt_score_in_prev_chrom
     else:
-        return np.mean(measurements[
-                           (measurements.chrom == reg_chrom) & (measurements.chrom_start >= reg_chrom_start) & (
-                           measurements.chrom_end <= reg_chrom_end)].rt_score)
+        return np.mean(measurements[(measurements.chrom == reg_chrom) & (measurements.chrom_start >= reg_chrom_start) & (measurements.chrom_end <= reg_chrom_end)].rt_score)
 
 #global variables:
 #order of chromosomes in bed files:
