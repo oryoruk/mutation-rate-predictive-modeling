@@ -259,20 +259,22 @@ print no_of_mutations_in_regions(analysis_dir, rt_intersected_query_regions_file
 
 
 
-"""
 # forcing the dtype of chrom to be of object
 rt_query_sites = pd.read_csv(analysis_dir + sites_in_rt_binned_query_regions_file, delimiter='\t', header=None,
                              names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object})
 rt_query_regs = pd.read_csv(analysis_dir + rt_binned_query_regions_file, delimiter='\t', header=None,
                             names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object})
+rt_query_measurements = pd.read_csv(analysis_dir + rt_meas_in_rt_intersected_query_regions_file, delimiter='\t', header=None,
+                            names=['chrom', 'chrom_start', 'chrom_end','rt_score'], dtype={'chrom': object})
 
 cur_win_chrom = '1'
 cur_win_len, cur_win_start, cur_win_end = [0] * 3
-win_site_counts = []
+results = pd.DataFrame(columns = ['rt_score','site_counts'])
 window_starts_in_prev_chrom = False
 
 for i, reg in rt_query_regs.iterrows():
 
+    if i  %1000==0: print i
     cur_reg_len = reg.chrom_end - reg.chrom_start
     if reg.chrom != cur_win_chrom:
         cur_win_chrom = reg.chrom
@@ -295,19 +297,20 @@ for i, reg in rt_query_regs.iterrows():
         # print cur_win_chrom, cur_win_start, cur_win_end, window_starts_in_prev_chrom
         win_site_count = no_of_sites_in_window(rt_query_sites, cur_win_chrom, cur_win_start, cur_win_end,
                                                chrom_order, window_starts_in_prev_chrom)
+        win_avg_rt_score = avg_rt_score_in_window(rt_query_measurements, cur_win_chrom, cur_win_start, cur_win_end,
+                                               chrom_order, window_starts_in_prev_chrom)
         # if the window started in previous chromosome update it for next window:
         if window_starts_in_prev_chrom:
             # print win_site_count
             window_starts_in_prev_chrom = False
 
-        # append number of sites in this window
-        win_site_counts.append(win_site_count)
+
+        results = results.append(pd.DataFrame([[win_avg_rt_score,win_site_count]],\
+                                              columns=['rt_score', 'site_counts']),\
+                                                             ignore_index=True)
 
         # if (len(win_site_counts) %100 )== 0:
         #   print len(win_site_counts)
-
-
-
         # print(win_site_count)
 
         # to-do: current region might be even larger than the win_size, tackle that scenario
@@ -318,10 +321,10 @@ for i, reg in rt_query_regs.iterrows():
         cur_win_start = cur_win_end
         cur_win_end = reg.chrom_end
 
-# pickle win_site_counts + rt_state + win_size
-win_site_counts_filename = analysis_dir + 'win_site_counts_' + str(win_size) + '_' + rt_state + '.pickle'
-fileObject = open(win_site_counts_filename, 'wb')
-pickle.dump(win_site_counts, fileObject)
-fileObject.close()
 
-"""
+
+# pickle win_site_counts + rt_state + win_size
+results_filename = analysis_dir + 'results_' + str(win_size) + '_' + rt_state + '.pickle'
+fileObject = open(results_filename, 'wb')
+pickle.dump(results, fileObject)
+fileObject.close()
