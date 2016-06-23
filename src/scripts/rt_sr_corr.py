@@ -136,6 +136,23 @@ def no_of_sites_in_window(sites, reg_chrom, reg_chrom_start, reg_chrom_end, chro
         return len(sites[(sites.chrom == reg_chrom) & (sites.chrom_start>=reg_chrom_start)& (sites.chrom_end<=reg_chrom_end)].index)
 
 
+
+def avg_rt_score_in_window(measurements, reg_chrom, reg_chrom_start, reg_chrom_end, chrom_order,
+                           window_starts_in_prev_chrom=False):
+    if window_starts_in_prev_chrom:
+        # no of sites in this chromosome
+        avg_rt_score_in_cur_chrom = np.mean(
+            measurements[(measurements.chrom == reg_chrom) & (measurements.chrom_end <= reg_chrom_end)].rt_score)
+        prev_chrom = chrom_order[chrom_order.index(str(reg_chrom)) - 1]
+        # no of sites in next chromosome
+        avg_rt_score_in_prev_chrom = np.mean(measurements[(measurements.chrom == prev_chrom) & (
+        measurements.chrom_start >= reg_chrom_start)].rt_score)
+        return no_of_sites_in_prev_chrom + no_of_sites_in_cur_chrom
+    else:
+        return np.mean(measurements[
+                           (measurements.chrom == reg_chrom) & (measurements.chrom_start >= reg_chrom_start) & (
+                           measurements.chrom_end <= reg_chrom_end)].rt_score)
+
 #global variables:
 #order of chromosomes in bed files:
 chrom_order = [str(c) for c in range(1,23)]+ ['X','Y']
@@ -260,9 +277,9 @@ print no_of_mutations_in_regions(analysis_dir, rt_intersected_query_regions_file
 
 
 # forcing the dtype of chrom to be of object
-rt_query_sites = pd.read_csv(analysis_dir + sites_in_rt_binned_query_regions_file, delimiter='\t', header=None,
+rt_query_sites = pd.read_csv(analysis_dir + sites_in_rt_intersected_query_regions_file, delimiter='\t', header=None,
                              names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object})
-rt_query_regs = pd.read_csv(analysis_dir + rt_binned_query_regions_file, delimiter='\t', header=None,
+rt_query_regs = pd.read_csv(analysis_dir + rt_intersected_query_regions_file, delimiter='\t', header=None,
                             names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object})
 rt_query_measurements = pd.read_csv(analysis_dir + rt_meas_in_rt_intersected_query_regions_file, delimiter='\t', header=None,
                             names=['chrom', 'chrom_start', 'chrom_end','rt_score'], dtype={'chrom': object})
