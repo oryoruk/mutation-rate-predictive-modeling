@@ -1,5 +1,9 @@
 #!usr/bin/python
 
+#example command:
+#python binned_rt_sr_corr.py whole acc_nc_auto rt_koren_lb snp_1kg_eur 50000
+
+
 #libraries:
 import subprocess
 import sys
