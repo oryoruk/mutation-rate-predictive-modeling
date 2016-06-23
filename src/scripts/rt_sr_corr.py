@@ -291,7 +291,7 @@ window_starts_in_prev_chrom = False
 
 for i, reg in rt_query_regs.iterrows():
 
-    if i  %1000==0: print i
+    #if i  %1000==0: print i
     cur_reg_len = reg.chrom_end - reg.chrom_start
     if reg.chrom != cur_win_chrom:
         cur_win_chrom = reg.chrom
