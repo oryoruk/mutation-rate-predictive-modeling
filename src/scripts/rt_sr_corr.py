@@ -150,6 +150,20 @@ def avg_rt_score_in_window(measurements, reg_chrom, reg_chrom_start, reg_chrom_e
     else:
         return np.mean(measurements[(measurements.chrom == reg_chrom) & (measurements.chrom_start >= reg_chrom_start) & (measurements.chrom_end <= reg_chrom_end)].rt_score)
 
+def median_rt_score_in_window(measurements, reg_chrom, reg_chrom_start, reg_chrom_end, chrom_order,
+                                   window_starts_in_prev_chrom=False):
+    if window_starts_in_prev_chrom:
+        # no of sites in this chromosome
+        median_rt_score_in_cur_chrom = np.median(measurements[(measurements.chrom == reg_chrom) & (measurements.chrom_end <= reg_chrom_end)].rt_score)
+        prev_chrom = chrom_order[chrom_order.index(str(reg_chrom)) - 1]
+        # no of sites in next chromosome
+        median_rt_score_in_prev_chrom = np.median(measurements[(measurements.chrom == prev_chrom) & (measurements.chrom_start >= reg_chrom_start)].rt_score)
+        return median_rt_score_in_cur_chrom + median_rt_score_in_prev_chrom
+    else:
+        return np.median(measurements[(measurements.chrom == reg_chrom) & (measurements.chrom_start >= reg_chrom_start) & (measurements.chrom_end <= reg_chrom_end)].rt_score)
+
+
+
 #global variables:
 #order of chromosomes in bed files:
 chrom_order = [str(c) for c in range(1,23)]+ ['X','Y']
@@ -283,7 +297,7 @@ rt_query_measurements = pd.read_csv(analysis_dir + rt_meas_in_rt_intersected_que
 
 cur_win_chrom = '1'
 cur_win_len, cur_win_start, cur_win_end = [0] * 3
-results = pd.DataFrame(columns = ['rt_score','site_counts'])
+results = pd.DataFrame(columns = ['mean_rt_score','median_rt_score','site_counts'])
 window_starts_in_prev_chrom = False
 
 for i, reg in rt_query_regs.iterrows():
@@ -313,14 +327,16 @@ for i, reg in rt_query_regs.iterrows():
                                                chrom_order, window_starts_in_prev_chrom)
         win_avg_rt_score = avg_rt_score_in_window(rt_query_measurements, cur_win_chrom, cur_win_start, cur_win_end,
                                                chrom_order, window_starts_in_prev_chrom)
+        median_avg_rt_score = median_rt_score_in_window(rt_query_measurements, cur_win_chrom, cur_win_start, cur_win_end,
+                                               chrom_order, window_starts_in_prev_chrom)
         # if the window started in previous chromosome update it for next window:
         if window_starts_in_prev_chrom:
             # print win_site_count
             window_starts_in_prev_chrom = False
 
 
-        results = results.append(pd.DataFrame([[win_avg_rt_score,win_site_count]],\
-                                              columns=['rt_score', 'site_counts']),\
+        results = results.append(pd.DataFrame([[win_avg_rt_score,median_avg_rt_score,win_site_count]],\
+                                              columns=['mean_rt_score', 'median_rt_score','site_counts']),\
                                                              ignore_index=True)
 
         # if (len(win_site_counts) %100 )== 0:
