@@ -338,7 +338,7 @@ for i, reg in rt_query_regs.iterrows():
 
 
 # pickle win_site_counts + rt_state + win_size
-results_filename = analysis_dir + 'results_' + str(win_size) + '_' + rt_state + '.pickle'
+results_filename = analysis_dir + 'results_' + str(win_size)  + '.pickle'
 fileObject = open(results_filename, 'wb')
 pickle.dump(results, fileObject)
 fileObject.close()
