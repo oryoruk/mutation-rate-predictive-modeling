@@ -21,6 +21,7 @@ import warnings
 pd.options.display.mpl_style = 'default'
 
 
+
 #functions:
 def bedtools_operation_cmd( query_regions_path, query_regions_file,\
                             regions_to_apply_path, regions_to_apply_file,\
@@ -116,9 +117,9 @@ no_of_resampling = 1000
 win_size =  5 * 10**4
 #no_of_resampling = 10**3
 #resampling_ratio = 0.9
+output_dir = './../../output/initial_analysis/binned_bootstrapped_rt_mr_corr/'
+input_dir = './../../data/formatted_regions_sites/'
 
-#analysis:
-current_path = './'
 
 initial_regions = sys.argv[1]
 filters = sys.argv[2]
@@ -139,16 +140,16 @@ except:
 analysis_folder = '__'.join([initial_regions, filters, \
                             rt_regions, mutation_dataset])
 if analysis_folder_suffix:  analysis_folder += '__' + analysis_folder_suffix
-analysis_path = './' + analysis_folder + '/'
+analysis_dir = output_dir + analysis_folder + '/'
 
 print 'creating analysis folder: ' + analysis_folder
-subprocess.call('mkdir ' + analysis_path, shell=True)
+subprocess.call('mkdir ' + analysis_dir, shell=True)
 
 query_regions = initial_regions + '__' + filters
 query_regions_file = regions_file_name(query_regions)
 mutation_dataset_file = sites_file_name(mutation_dataset)
 
-total_no_of_muts = total_size_of_regions(current_path, \
+total_no_of_muts = total_size_of_regions(input_dir, \
                                                 mutation_dataset_file)
 total_sizes_of_all_rt_binned_regs = []
 no_of_muts_in_all_rt_binned_regs = []
@@ -159,22 +160,26 @@ no_of_muts_in_all_rt_binned_regs = []
 #counting the corresponding mutations in each subset
 #note-to-self: might want to keep these regions ready for the script
 for rt_state in list_of_rt_states:
-    print 'intersecting with ' + rt_state
-    rt_state_regs_file = regions_file_name(rt_regions.strip('rt') + rt_state)
+
+
+    print 'intersecting query regions with ' + rt_state
+    rt_state_regs_file = regions_file_name(rt_state + rt_regions.strip('rt') )
     rt_binned_query_regions_file = regions_file_name(query_regions + '__'\
-                                        + rt_regions.strip('rt') + rt_state)
-    bedtools_intersect_and_save_results(current_path, query_regions_file,\
-                                        current_path, rt_state_regs_file,\
-                                        analysis_path,\
+                                        +rt_state+ rt_regions.strip('rt'))
+    #using bedtools to find the intersections:
+    bedtools_intersect_and_save_results(input_dir, query_regions_file, \
+                                        input_dir, rt_state_regs_file, \
+                                        analysis_dir, \
                                         rt_binned_query_regions_file)
-    print 'saving rt binned query regions file for ' + rt_state
+    #example file name: 'reg_whole__acc_nc_auto__koren_s1.bed'
+    print 'saving rt binned query regions for ' + rt_state
     #to-do: make sure this function works as expected
-    total_size_of_rt_binned_regs = total_size_of_regions(analysis_path,\
-                                                rt_binned_query_regions_file)
-    no_of_muts_in_rt_binned_regs = no_of_mutations_in_regions(analysis_path,\
-                                            rt_binned_query_regions_file,\
-                                            current_path, \
-                                            mutation_dataset_file)
+    total_size_of_rt_binned_regs = total_size_of_regions(analysis_dir, \
+                                                         rt_binned_query_regions_file)
+    no_of_muts_in_rt_binned_regs = no_of_mutations_in_regions(analysis_dir, \
+                                                              rt_binned_query_regions_file, \
+                                                              input_dir, \
+                                                              mutation_dataset_file)
     total_sizes_of_all_rt_binned_regs.append(total_size_of_rt_binned_regs)
     no_of_muts_in_all_rt_binned_regs.append(no_of_muts_in_rt_binned_regs)
 
@@ -206,7 +211,7 @@ for temp1 in range(no_of_resampling):
 samples =  np.array(samples)
 samples =  np.transpose(samples)
 
-with open(analysis_path + analysis_folder + '__samples.csv','w') as samples_file:
+with open(analysis_dir + analysis_folder + '__samples.csv', 'w') as samples_file:
     writer = csv.writer(samples_file,delimiter='\t')
     for i in range(no_of_rt_states):
         writer.writerow(samples[i])
@@ -305,7 +310,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     plt.tight_layout()
 
-plt.savefig(analysis_path + analysis_folder)
+plt.savefig(analysis_dir + analysis_folder)
 #plt.show()
 
 for i in range(no_of_rt_states):
@@ -315,7 +320,7 @@ for sx, sy in itertools.permutations(range(4),2):
     notes +=  "Wilcoxon Rank-Sum Test P-value (S"+str(sx+1)+" & S" + str(sy+1)+ "): " +str(scipy.stats.ranksums(densities[sx],densities[sy] )[1]) + '\n'
     notes +=  "Wilcoxon Signed-Rank Test P-value (S"+str(sx+1)+" & S" + str(sy+1)+ "): " +str(scipy.stats.wilcoxon(densities[sx],densities[sy] )[1]) + '\n'
 
-with open(analysis_path + analysis_folder + '__notes.txt','w') as notes_file:
+with open(analysis_dir + analysis_folder + '__notes.txt', 'w') as notes_file:
     notes_file.write(notes)
 
 print 'saving 2nd plot'
@@ -377,7 +382,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     plt.tight_layout()
 
-plt.savefig(analysis_path + analysis_folder + '__framed.png')
+plt.savefig(analysis_dir + analysis_folder + '__framed.png')
 #plt.show()
 
 
@@ -447,7 +452,7 @@ with warnings.catch_warnings():
     plt.tight_layout()
 
 
-plt.savefig(analysis_path + analysis_folder + '__normalized.png')                                                      
+plt.savefig(analysis_dir + analysis_folder + '__normalized.png')
 
 
 for i in range(no_of_rt_states):
@@ -457,7 +462,7 @@ for sx, sy in itertools.permutations(range(4),2):
     notes +=  "Wilcoxon Rank-Sum Test P-value (S"+str(sx+1)+" & S" + str(sy+1)+ "): " +str(scipy.stats.ranksums(norm_densities[sx],norm_densities[sy] )[1]) + '\n'
     notes +=  "Wilcoxon Signed-Rank Test P-value (S"+str(sx+1)+" & S" + str(sy+1)+ "): " +str(scipy.stats.wilcoxon(norm_densities[sx],norm_densities[sy] )[1]) + '\n'
 
-with open(analysis_path + analysis_folder + '__normalized_notes.txt','w') as notes_file:
+with open(analysis_dir + analysis_folder + '__normalized_notes.txt', 'w') as notes_file:
     notes_file.write(notes)
 
 print 'saving 4th plot'
@@ -520,7 +525,7 @@ with warnings.catch_warnings():
     plt.tight_layout()
 
 
-plt.savefig(analysis_path + analysis_folder + '__normalized_framed.png')                                                      
+plt.savefig(analysis_dir + analysis_folder + '__normalized_framed.png')
 
 
 print 'saving 5th plot'
@@ -587,7 +592,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     plt.tight_layout()
 
-plt.savefig(analysis_path + analysis_folder + '__normalized_fixed_small.png')
+plt.savefig(analysis_dir + analysis_folder + '__normalized_fixed_small.png')
 
 
 print 'saving 6th plot'
@@ -654,7 +659,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     plt.tight_layout()
 
-plt.savefig(analysis_path + analysis_folder + '__normalized_fixed.png')
+plt.savefig(analysis_dir + analysis_folder + '__normalized_fixed.png')
 """
 #initial plotting functions
 ########################################
