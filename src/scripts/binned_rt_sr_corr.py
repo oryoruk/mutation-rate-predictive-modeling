@@ -327,5 +327,6 @@ for rt_state in list_of_rt_states:
     # sanity check
     print len(win_site_counts)
 
+
 print total_sizes_of_all_rt_binned_regs
 print no_of_muts_in_all_rt_binned_regs
