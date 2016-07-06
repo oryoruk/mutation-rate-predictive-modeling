@@ -318,7 +318,7 @@ for rt_state in list_of_rt_states:
             cur_win_end = reg.chrom_end
 
     # pickle win_site_counts + rt_state + win_size
-    win_site_counts_filename = analysis_dir + 'win_site_counts_' + str(win_size) + '_' + rt_state + '.pickle'
+    win_site_counts_filename = analysis_dir + 'counts_' + str(win_size) + '_' + rt_state + '.pickle'
     fileObject = open(win_site_counts_filename, 'wb')
     pickle.dump(win_site_counts, fileObject)
     fileObject.close()
