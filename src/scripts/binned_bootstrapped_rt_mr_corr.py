@@ -1,5 +1,8 @@
 #!usr/bin/python
 
+#example command:
+#python binned_bootstrapped_rt_mr_corr.py whole acc_nc_auto rt_koren_lb snp_1kg_eur
+
 #libraries:
 import subprocess
 import sys
@@ -19,6 +22,7 @@ from collections import defaultdict
 from random import randint
 import warnings
 pd.options.display.mpl_style = 'default'
+import pickle
 
 
 
@@ -113,8 +117,7 @@ def sites_file_name(sites_name):
 #global variables:
 no_of_rt_states = 4
 list_of_rt_states = ['s'+str(i+1) for i in range(no_of_rt_states)]
-no_of_resampling = 1000
-win_size =  5 * 10**4
+no_of_resampling = 10**4
 #no_of_resampling = 10**3
 #resampling_ratio = 0.9
 output_dir = './../../output/initial_analysis/binned_bootstrapped_rt_mr_corr/'
@@ -211,11 +214,20 @@ for temp1 in range(no_of_resampling):
 samples =  np.array(samples)
 samples =  np.transpose(samples)
 
+
 with open(analysis_dir + analysis_folder + '__samples.csv', 'w') as samples_file:
     writer = csv.writer(samples_file,delimiter='\t')
     for i in range(no_of_rt_states):
         writer.writerow(samples[i])
 #End of OPTION 1:
+
+for i in range(no_of_rt_states):
+    win_site_counts_filename = analysis_dir + 'counts_' + str(total_sizes_of_all_rt_binned_regs[i]) + '_' + list_of_rt_states[i] + '.pickle'
+    fileObject = open(win_site_counts_filename, 'wb')
+    pickle.dump(samples[i], fileObject)
+    fileObject.close()
+print 'counts for windows saved for rt state ' + rt_state
+
 """
 
 #OPTION 2:
@@ -660,6 +672,13 @@ with warnings.catch_warnings():
     plt.tight_layout()
 
 plt.savefig(analysis_dir + analysis_folder + '__normalized_fixed.png')
+
+
+
+
+
+
+
 """
 #initial plotting functions
 ########################################
