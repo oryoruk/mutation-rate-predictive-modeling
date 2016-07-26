@@ -261,9 +261,9 @@ for rt_state in list_of_rt_states:
     #time.sleep(5)
     # forcing the dtype of chrom to be of object
     rt_query_sites = pd.read_csv(analysis_dir + sites_in_rt_binned_query_regions_file, delimiter='\t', header=None,
-                                 names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object})
+                                 names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object},index_col=False)
     rt_query_regs = pd.read_csv(analysis_dir + rt_binned_query_regions_file, delimiter='\t', header=None,
-                                names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object})
+                                names=['chrom', 'chrom_start', 'chrom_end'], dtype={'chrom': object},index_col=False)
 
     cur_win_chrom = '1'
     cur_win_len, cur_win_start, cur_win_end = [0] * 3
