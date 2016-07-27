@@ -1,7 +1,7 @@
 #!usr/bin/python
 
 #example command:
-#python binned_bootstrapped_rt_mr_corr.py whole acc_nc_auto rt_koren_lb snp_1kg_eur
+#python binned_bootstrapped_rt_mr_corr.py whole acc_nc_auto rt_koren_lb sm_koren
 
 #libraries:
 import subprocess
