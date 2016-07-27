@@ -11,14 +11,16 @@ import subprocess
 if __name__ == "__main__":
     species = sys.argv[1]
     rt_dataset = sys.argv[2]
-    output_dir = './../../output/initial_analysis/binned_rt_dr_corr/'
+    output_dir = './../../../output/initial_analysis/binned_rt_dr_corr/'
     analysis_folder =  'whole__acc_nc_auto__' + rt_dataset + '__' + species
     analysis_dir = output_dir + analysis_folder + '/'
+    subprocess.call('mkdir ' + analysis_dir, shell=True)
 
     chrom = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22"]
     for rt_state in ['s1','s2','s3','s4']:
         #Find which regions to even consider in the first place
         handle = file("raw_data/reg_"+rt_state+ rt_dataset[2:] +  ".bed_sorted_noncoding_merged_"+species,"r")
+        #handle = file("raw_data/reg_"+rt_dataset[:-2] +rt_state+  ".bed_sorted_noncoding_merged_"+species,"r")
         regions_okay = dict()
         content = handle.readlines()
         for entry in content:
@@ -29,7 +31,6 @@ if __name__ == "__main__":
                 if not (int(entry[4]),int(entry[5])) in regions_okay[entry[0]]:
                     regions_okay[entry[0]][ (int(entry[4]),int(entry[5])) ] = [] 
                 regions_okay[entry[0]][(int(entry[4]),int(entry[5]))].append( (int(entry[1]),int(entry[2])) )
-        subprocess.call('mkdir ' + analysis_dir, shell=True)
         handle_write = file(analysis_dir + rt_state+"_"+species+"_divergence_results","w")
         for chromosome in chrom:
         #Read the file and the counts of kmer
