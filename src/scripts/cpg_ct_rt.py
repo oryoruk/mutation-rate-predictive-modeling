@@ -37,8 +37,8 @@ def get_seq_context_interval(chr_name,start_p,end_p,before_after):
     else:
         print "Chromosome entered is not valid"
 
-def get_seq_context_variant(chr_name,position,before,after):
-    return random.choice(cpg_contexts.keys())
+#def get_seq_context_variant(chr_name,position,before,after):
+#    return random.choice(cpg_contexts.keys())
 
 def reverse_complement(seq):
     complement_code = dict( zip( "ATCGNatcgn" , "TAGCNtagcn" ) )
@@ -90,7 +90,7 @@ snps = pd.read_csv(snp_file, delimiter = '\t', header = None, names = ['chrom','
 snps = snps[snps.chrom==chrom]
 
 
-for i, cpg_site in cpg_sites_in_rt[cpg_sites_in_rt.chrom==chrom].iterrows():
+for i, cpg_site in cpg_sites_in_rt.iterrows():
 
     #here is the first part: 1ST NUCLEOTIDE in CpG:
     try:
@@ -108,7 +108,7 @@ for i, cpg_site in cpg_sites_in_rt[cpg_sites_in_rt.chrom==chrom].iterrows():
     #here is the second part: 2ND NUCLEOTIDE in CpG:
     cpg_context = get_seq_context_variant(cpg_site.chrom, cpg_site.chrom_start+1, before, after)
     #DELETE THIS NEXT LINE: it's only for the mock function
-    cpg_context = reverse_complement(cpg_context)
+    #cpg_context = reverse_complement(cpg_context)
     if reverse_complement(cpg_context) in cpg_contexts:
         cpg_contexts[reverse_complement(cpg_context)][0]+=1
         c_to_t_sub = check_if_c_to_t(snps, cpg_site.chrom,cpg_site.chrom_start,reverse_strand = True)
