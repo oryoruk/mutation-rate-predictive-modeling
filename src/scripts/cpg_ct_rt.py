@@ -45,7 +45,6 @@ def reverse_complement(seq):
     #return "".join( complement_code[nuc] for nuc in reversed(seq) )
     return "".join( complement_code[nuc] for nuc in seq[::-1] )
 
-
 def check_if_c_to_t(snps,chrom,chrom_start,reverse_strand = False):
     snp_at_site = snps[(snps.chrom==chrom)&(snps.chrom_start==chrom_start)]
     if snp_at_site.empty:
