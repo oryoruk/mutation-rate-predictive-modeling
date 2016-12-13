@@ -64,8 +64,8 @@ def check_if_c_to_t(snps,chrom,chrom_start,reverse_strand = False):
                 return False
 
 
-rt = sys.argv[1]
-chrom = sys.argv[2]
+chrom = sys.argv[1]
+rt = sys.argv[2]
 
 context_size = 7
 before = (context_size-1)/2
