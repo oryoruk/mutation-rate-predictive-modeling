@@ -66,7 +66,7 @@ def check_if_c_to_t(snps,chrom,chrom_start,reverse_strand = False):
 
 chrom = sys.argv[1]
 rt = sys.argv[2]
-save_file_name = sys.argv[3]
+#save_file_name = sys.argv[3]
 
 context_size = 7
 before = (context_size-1)/2
