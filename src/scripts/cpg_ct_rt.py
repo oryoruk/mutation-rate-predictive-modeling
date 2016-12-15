@@ -74,8 +74,8 @@ after = (context_size-1)/2
 
 cpg_file = './../../data/cpg_ct_rt/reg_whole__acc_nc_auto__'+rt+'_hmmseg_fsu_hesc_bg01_cpgs.bed'
 snp_file = './../../data/mutation_datasets/snp/all_var_EUR_chr_loc'
-#output_file = './../../output/initial_analysis/cpg_ct_rt/' + chrom + '_' +rt
-output_file = './../../output/initial_analysis/cpg_ct_rt/' + save_file_name
+output_file = './../../output/initial_analysis/cpg_ct_rt/' + chrom + '_' +rt
+#output_file = './../../output/initial_analysis/cpg_ct_rt/' + save_file_name
 
 
 cpg_columns = ['chrom','chrom_start','chrom_end']
