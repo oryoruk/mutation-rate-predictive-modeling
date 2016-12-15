@@ -265,7 +265,8 @@ notes = ""
 
 slope, intercept, r_value, p_value, slope_std_error = scipy.stats.linregress(rt_states,list_of_densities)
 
-annotation = "Pearson R: "+ str(np.corrcoef(rt_states,list_of_densities)[0,1]) + "\n" \
+annotation = "Pearson R: "+ str(hht
+                                ) + "\n" \
             "Slope: "+ str(slope) + "\n" \
             "P-value: "+ str(p_value)
 notes += annotation + '\n'

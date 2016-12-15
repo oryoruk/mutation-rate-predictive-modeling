@@ -109,19 +109,19 @@ for i, cpg_site in cpg_sites_in_rt.iterrows():
             cpg_contexts[cpg_context][1]+=1
 
     #here is the second part: 2ND NUCLEOTIDE in CpG:
-    cpg_context = get_seq_context_variant(cpg_site.chrom, cpg_site.chrom_start+1, before, after)
+    try:
+        cpg_context = get_seq_context_variant(cpg_site.chrom, cpg_site.chrom_start + 1, before, after)
+    except:
+        cpg_context = ''
     #DELETE THIS NEXT LINE: it's only for the mock function
     #cpg_context = reverse_complement(cpg_context)
     if reverse_complement(cpg_context) in cpg_contexts:
         cpg_contexts[reverse_complement(cpg_context)][0]+=1
-        c_to_t_sub = check_if_c_to_t(snps, cpg_site.chrom,cpg_site.chrom_start,reverse_strand = True)
+        c_to_t_sub = check_if_c_to_t(snps, cpg_site.chrom,cpg_site.chrom_start + 1,reverse_strand = True)
         if c_to_t_sub:
             cpg_contexts[reverse_complement(cpg_context)][1] += 1
-
 
 #save dictionary:
 fileObject = open(output_file, 'wb')
 pickle.dump(cpg_contexts, fileObject)
 fileObject.close()
-
-
