@@ -71,7 +71,7 @@ before = (context_size-1)/2
 after = (context_size-1)/2
 
 cpg_file = './../../data/formatted_regions_sites/reg_whole__acc_nc_auto_cpg.bed'
-snp_file = './../../data/mutation_datasets/snp/all_var_EUR_chr_loc'
+snp_file = './../../data/mutation_datasets/snp/all_var_EUR_chr_loc_sorted'
 output_file = './../../output/initial_analysis/cpg_ct/' + str(job_index)
 #output_file = './../../output/initial_analysis/cpg_ct_rt/' + save_file_name
 
@@ -90,8 +90,8 @@ cpg_sites = pd.read_csv(cpg_file, delimiter = '\t', header = None, names = cpg_c
 cpg_sites = cpg_sites[job_index*10**4:(job_index+1)*10**4]
 
 snps = pd.read_csv(snp_file, delimiter = '\t', header = None, names = ['chrom','chrom_start','ref','alt','alt2','id','freq'], dtype ={'chrom':object})
-snps.sort_values(['chrom','chrom_start'],ascending=[1,1], inplace=True)
-snps.reset_index(drop=True,inplace=True)
+#snps.sort_values(['chrom','chrom_start'],ascending=[1,1], inplace=True)
+#snps.reset_index(drop=True,inplace=True)
 #subset of snps that this job needs to consider:
 slice_start_chrom = cpg_sites.head(1).chrom.iloc[0]
 slice_end_chrom = cpg_sites.tail(1).chrom.iloc[0]
