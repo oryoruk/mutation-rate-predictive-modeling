@@ -102,7 +102,7 @@ slice_end_index = snps[(snps.chrom == slice_end_chrom)&(snps.chrom_start < slice
 snps = snps[slice_start_index : slice_end_index ]
 
 exception_counter = 0
-for i, cpg_site in cpg_sites_in_rt.iterrows():
+for i, cpg_site in cpg_sites.iterrows():
 
     #here is the first part: 1ST NUCLEOTIDE in CpG:
     try:
