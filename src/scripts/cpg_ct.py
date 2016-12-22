@@ -94,8 +94,8 @@ snps.sort_values(['chrom','chrom_start'],ascending=[1,1], inplace=True)
 snps.reset_index(drop=True,inplace=True)
 #subset of snps that this job needs to consider:
 slice_start_chrom = cpg_sites.head(1).chrom.iloc[0]
-slice_end_chrom = cpg_sites.head(1).chrom_start.iloc[0]
-slice_start_chrom_start = cpg_sites.tail(1).chrom.iloc[0]
+slice_end_chrom = cpg_sites.tail(1).chrom.iloc[0]
+slice_start_chrom_start = cpg_sites.head(1).chrom_start.iloc[0]
 slice_end_chrom_end = cpg_sites.tail(1).chrom_end.iloc[0]
 slice_start_index = snps[(snps.chrom == slice_start_chrom)&(snps.chrom_start >= slice_start_chrom_start)].head(1).index[0]
 slice_end_index = snps[(snps.chrom == slice_end_chrom)&(snps.chrom_start < slice_end_chrom_end)].tail(1).index[0] + 1
