@@ -70,7 +70,8 @@ context_size = 7
 before = (context_size-1)/2
 after = (context_size-1)/2
 
-cpg_file = './../../data/formatted_regions_sites/reg_whole__acc_nc_auto_cpg.bed'
+#cpg_file = './../../data/formatted_regions_sites/reg_whole__acc_nc_auto_cpg.bed'
+cpg_file = './../../data/formatted_regions_sites/reg_whole__nc2_cpg.bed'
 snp_file = './../../data/mutation_datasets/snp/all_var_EUR_chr_loc_sorted'
 output_file = './../../output/initial_analysis/cpg_ct/' + str(job_index)
 #output_file = './../../output/initial_analysis/cpg_ct_rt/' + save_file_name
