@@ -62,21 +62,24 @@ def only_main_4_bases(seq):
     #this function returns True for empty strings
     return all(nuc in list('GATC') for nuc in seq)
 
-regions_file_name = \
-snp_file_name =
-output_file =
-total_no_of_jobs = int(sys.argv[1])
-job_index = int(sys.argv[2])
 
+#taking inputs: folders/files and total number of jobs and current jobs index
+regions_file_name = int(sys.argv[1])
+snp_file_name = int(sys.argv[2])
+output_dir = int(sys.argv[3])
+total_no_of_jobs = int(sys.argv[4])
+job_index = int(sys.argv[5])
 
+#hardcoded size for the sequence context
 context_size = 7
 before = (context_size-1)/2
 after = (context_size-1)/2
 
 #cpg_file = './../../data/formatted_regions_sites/reg_whole__acc_nc_auto_cpg.bed'
-regions_file = './../../data/formatted_regions_sites/reg_whole__nc2_cpg.bed'
-snp_file = './../../data/mutation_datasets/snp/all_var_EUR_chr_loc_sorted'
-output_file = './../../output/initial_analysis/cpg_ct/' + str(job_index)
+regions_file = './../../data/formatted_regions_sites/' + regions_file_name
+snp_file = './../../data/mutation_datasets/snp/' + snp_file_name
+output_file = output_dir + str(job_index)
+#output_file = './../../output/initial_analysis/cpg_ct/' + str(job_index)
 #output_file = './../../output/initial_analysis/cpg_ct_rt/' + save_file_name
 
 
@@ -85,6 +88,8 @@ cpg_columns = ['chrom','chrom_start','chrom_end']
 #initialization of dictionary to hold info on all contexts:
 sub_rates_dct = {}
 #here are the substitutions and corresponding fold I am recording:
+#I hardcoded these for consistency with other jobs, and Aggarwala et al. 2016 table
+#out of 12 possible substitutions I am only considering these 6 by folding
 subs   = ['CT','CA','CG','AT','AC','AG']
 #folds = ['GA','GT','GC','TA','TG','TC']
 nucs = list('GATC')
@@ -92,34 +97,37 @@ for sub in subs:
     for flanks in itertools.product(nucs,repeat = 6):
         ref = ''.join(flanks[:3]) + sub[0] + ''.join(flanks[3:])
         alt = ''.join(flanks[:3]) + sub[1] + ''.join(flanks[3:])
+        #key is the reference context + alternative context as in Varun's table
+        #two fields: one for context count, one for substitution count
         sub_rates_dct[ref+alt] = [0,0]
 
 
 bed_columns = ['chrom','chrom_start','chrom_end']
+#read in regions to consider
 regions = pd.read_csv(regions_file, delimiter = '\t', header = None, names = bed_columns, dtype ={'chrom':object})
 
-#subset of cpg sites that this job needs to consider:
-cpg_sites = cpg_sites[job_index*10**4:(job_index+1)*10**4]
+#subset of regions that this job needs to consider:
+reg_len = len(regions)
+size_of_each_job =  reg_len / total_no_of_jobs + 1
+regions[job_index*size_of_each_job:(job_index+1)*size_of_each_job]
+
 
 snps = pd.read_csv(snp_file, delimiter = '\t', header = None, names = ['chrom','chrom_start','ref','alt','alt2','id','freq'], dtype ={'chrom':object})
 #snps.sort_values(['chrom','chrom_start'],ascending=[1,1], inplace=True)
 #snps.reset_index(drop=True,inplace=True)
 #subset of snps that this job needs to consider:
-slice_start_chrom = cpg_sites.head(1).chrom.iloc[0]
-slice_end_chrom = cpg_sites.tail(1).chrom.iloc[0]
-slice_start_chrom_start = cpg_sites.head(1).chrom_start.iloc[0]
-slice_end_chrom_end = cpg_sites.tail(1).chrom_end.iloc[0]
+slice_start_chrom = regions.head(1).chrom.iloc[0]
+slice_end_chrom = regions.tail(1).chrom.iloc[0]
+slice_start_chrom_start = regions.head(1).chrom_start.iloc[0]
+slice_end_chrom_end = regions.tail(1).chrom_end.iloc[0]
 slice_start_index = snps[(snps.chrom == slice_start_chrom)&(snps.chrom_start >= slice_start_chrom_start)].head(1).index[0]
 slice_end_index = snps[(snps.chrom == slice_end_chrom)&(snps.chrom_start < slice_end_chrom_end)].tail(1).index[0] + 1
 snps = snps[slice_start_index : slice_end_index ]
 
 
 exception_counter = 0
-
 #for each region in regions from bed file:
 for i, region in regions.iterrows():
-    if i == 4:
-        break
     #for each site in the region:
     #increment the context count
     #also increment respective substitution count if there is any
