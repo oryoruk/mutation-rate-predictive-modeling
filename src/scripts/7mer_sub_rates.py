@@ -62,6 +62,19 @@ def only_main_4_bases(seq):
     #this function returns True for empty strings
     return all(nuc in list('GATC') for nuc in seq)
 
+def df_to_dct(df):
+    dct = {}
+    for i, row in df.iterrows():
+        dct[row.ref+row.alt] = [row.ref_count,row.sub_count]
+    return dct
+
+def dct_to_df(dct):
+    sub_rates_cols = ['ref','alt','ref_count','sub_count']
+    df = pd.DataFrame(columns = sub_rates_cols)
+    for key in dct:
+        #print [key[:7],key[7:],dct[key][0],dct[key][1]]
+        df = df.append(pd.DataFrame([[key[:7],key[7:],dct[key][0],dct[key][1]]],columns=sub_rates_cols),ignore_index=True)
+    return df
 
 #taking inputs: folders/files and total number of jobs and current jobs index
 regions_file_name = int(sys.argv[1])
@@ -109,9 +122,12 @@ regions = pd.read_csv(regions_file, delimiter = '\t', header = None, names = bed
 #subset of regions that this job needs to consider:
 reg_len = len(regions)
 size_of_each_job =  reg_len / total_no_of_jobs + 1
+#with this calculation some few number of jobs will have empty regions to work with
+#after the following slicing operation. that's ok. they will save empty dictionaries,
+#but I will have a round number of jobs to handle
 regions[job_index*size_of_each_job:(job_index+1)*size_of_each_job]
 
-
+#read in the file that contains all the substitutions
 snps = pd.read_csv(snp_file, delimiter = '\t', header = None, names = ['chrom','chrom_start','ref','alt','alt2','id','freq'], dtype ={'chrom':object})
 #snps.sort_values(['chrom','chrom_start'],ascending=[1,1], inplace=True)
 #snps.reset_index(drop=True,inplace=True)
@@ -130,17 +146,17 @@ exception_counter = 0
 for i, region in regions.iterrows():
     #for each site in the region:
     #increment the context count
-    #also increment respective substitution count if there is any
+    #also increment respective substitution count if there is any substitutions at that site
     for site in range(region.chrom_start, region.chrom_end):
-        #7mer context of the site
-        #set reverse strand flag to False, assume not reverse strand
+        #set reverse strand flag to False, assume not reverse strand at the start
         reverse_strand = False
+        #7mer context of the site
         site_context = get_seq_context_variant(region.chrom, site, before, after)
         site_nuc = site_context[3]
-        #continue if site context consists of only main 4 bases (G,A,T,C)
+        #continue if site context consists of only main 4 bases (G,A,T,C) and no N's or other codes
         if only_main_4_bases(site_context):
             #recording substitutions of C and A
-            #considering reverse strands for G and T
+            #considering reverse strands for G and T as hardcoded before
             #so if it is not C or A, consider the reverse complement
             #set reverse strand to True
             #and take reverse complement of both the context and the site
@@ -162,6 +178,7 @@ for i, region in regions.iterrows():
 
 print exception_counter
 #save dictionary:
+#i can convert this dictionary to a dataframe if I would like using the functions above
 fileObject = open(output_file, 'wb')
 pickle.dump(sub_rates_dct, fileObject)
 fileObject.close()
