@@ -77,9 +77,9 @@ def dct_to_df(dct):
     return df
 
 #taking inputs: folders/files and total number of jobs and current jobs index
-regions_file_name = int(sys.argv[1])
-snp_file_name = int(sys.argv[2])
-output_dir = int(sys.argv[3])
+regions_file_name = sys.argv[1]
+snp_file_name = sys.argv[2]
+output_dir = sys.argv[3]
 total_no_of_jobs = int(sys.argv[4])
 job_index = int(sys.argv[5])
 
