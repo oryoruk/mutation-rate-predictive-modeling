@@ -96,8 +96,6 @@ output_file = output_dir + str(job_index)
 #output_file = './../../output/initial_analysis/cpg_ct_rt/' + save_file_name
 
 
-cpg_columns = ['chrom','chrom_start','chrom_end']
-
 #initialization of dictionary to hold info on all contexts:
 sub_rates_dct = {}
 #here are the substitutions and corresponding fold I am recording:
@@ -125,7 +123,7 @@ size_of_each_job =  reg_len / total_no_of_jobs + 1
 #with this calculation some few number of jobs will have empty regions to work with
 #after the following slicing operation. that's ok. they will save empty dictionaries,
 #but I will have a round number of jobs to handle
-regions[job_index*size_of_each_job:(job_index+1)*size_of_each_job]
+regions = regions[job_index*size_of_each_job:(job_index+1)*size_of_each_job]
 
 #read in the file that contains all the substitutions
 snps = pd.read_csv(snp_file, delimiter = '\t', header = None, names = ['chrom','chrom_start','ref','alt','alt2','id','freq'], dtype ={'chrom':object})

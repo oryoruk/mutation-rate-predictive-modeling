@@ -117,7 +117,7 @@ for i, cpg_site in cpg_sites.iterrows():
         #check if it is c to t sub via 1KG EUR (or other SNP) File
         c_to_t_sub = check_if_c_to_t(snps,cpg_site.chrom,cpg_site.chrom_start,reverse_strand = False)
         if c_to_t_sub:
-            cpg_contexts[cpg_context][1]+=1
+            cpg_contexts[cpg_context][1] += 1
 
     #here is the second part: 2ND NUCLEOTIDE in CpG:
     try:
