@@ -123,21 +123,22 @@ size_of_each_job =  reg_len / total_no_of_jobs + 1
 #with this calculation some few number of jobs will have empty regions to work with
 #after the following slicing operation. that's ok. they will save empty dictionaries,
 #but I will have a round number of jobs to handle
-regions = regions[job_index*size_of_each_job:(job_index+1)*size_of_each_job]
+regions =   regions[job_index*size_of_each_job:(job_index+1)*size_of_each_job]
 
 #read in the file that contains all the substitutions
 snps = pd.read_csv(snp_file, delimiter = '\t', header = None, names = ['chrom','chrom_start','ref','alt','alt2','id','freq'], dtype ={'chrom':object})
 #snps.sort_values(['chrom','chrom_start'],ascending=[1,1], inplace=True)
 #snps.reset_index(drop=True,inplace=True)
 #subset of snps that this job needs to consider:
-slice_start_chrom = regions.head(1).chrom.iloc[0]
-slice_end_chrom = regions.tail(1).chrom.iloc[0]
-slice_start_chrom_start = regions.head(1).chrom_start.iloc[0]
-slice_end_chrom_end = regions.tail(1).chrom_end.iloc[0]
-slice_start_index = snps[(snps.chrom == slice_start_chrom)&(snps.chrom_start >= slice_start_chrom_start)].head(1).index[0]
-slice_end_index = snps[(snps.chrom == slice_end_chrom)&(snps.chrom_start < slice_end_chrom_end)].tail(1).index[0] + 1
-snps = snps[slice_start_index : slice_end_index ]
-
+#do this slicing if regions dataframe is not empty
+if not regions.empty:
+    slice_start_chrom = regions.head(1).chrom.iloc[0]
+    slice_end_chrom = regions.tail(1).chrom.iloc[0]
+    slice_start_chrom_start = regions.head(1).chrom_start.iloc[0]
+    slice_end_chrom_end = regions.tail(1).chrom_end.iloc[0]
+    slice_start_index = snps[(snps.chrom == slice_start_chrom)&(snps.chrom_start >= slice_start_chrom_start)].head(1).index[0]
+    slice_end_index = snps[(snps.chrom == slice_end_chrom)&(snps.chrom_start < slice_end_chrom_end)].tail(1).index[0] + 1
+    snps = snps[slice_start_index : slice_end_index ]
 
 exception_counter = 0
 #for each region in regions from bed file:
