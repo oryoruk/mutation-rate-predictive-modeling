@@ -76,6 +76,38 @@ def dct_to_df(dct):
         df = df.append(pd.DataFrame([[key[:7],key[7:],dct[key][0],dct[key][1]]],columns=sub_rates_cols),ignore_index=True)
     return df
 
+def snp_slice_indices(snp_file, slice_start_chrom, slice_end_chrom, slice_start_chrom_start, slice_end_chrom_end):
+    with open(snp_file, "r") as tab_del_file:
+        slice_start_index = 0
+        slice_end_index = 0
+        i = 0
+        for line in tab_del_file:
+            chrom, chrom_start =line.split('\t')[:2]
+            chrom_start = int(chrom_start)
+            #if the line at hand is not yet in the slice and changed slice_start_index, if it has entered before skip it
+            if not slice_start_index:
+                #if line is in the slice: chrom matches & chrom_start is larger than slice start
+                if chrom == slice_start_chrom and chrom_start >= slice_start_chrom_start:
+                    slice_start_index = i
+            #if chrom matches enter
+            if chrom == slice_end_chrom:
+                # if chrom_start is smaller update slice_end_index
+                if chrom_start < slice_end_chrom_end:
+                    slice_end_index = i
+                #else if chrom_start is larger than the slice_end get out of the loop
+                else:
+                    break
+            i += 1
+    slice_end_index += 1
+    return slice_start_index, slice_end_index
+
+def file_len(fname):
+    with open(fname) as f:
+        for i, l in enumerate(f):
+            pass
+    return i + 1
+
+
 #taking inputs: folders/files and total number of jobs and current jobs index
 regions_file_name = sys.argv[1]
 snp_file_name = sys.argv[2]
@@ -113,22 +145,25 @@ for sub in subs:
         sub_rates_dct[ref+alt] = [0,0]
 
 
-bed_columns = ['chrom','chrom_start','chrom_end']
-#read in regions to consider
-regions = pd.read_csv(regions_file, delimiter = '\t', header = None, names = bed_columns, dtype ={'chrom':object})
+
 
 #subset of regions that this job needs to consider:
-reg_len = len(regions)
+reg_len = file_len(regions_file)
 size_of_each_job =  reg_len / total_no_of_jobs + 1
+#read in regions to consider
+bed_columns = ['chrom','chrom_start','chrom_end']
+regions = pd.read_csv(regions_file, delimiter = '\t', header = None, names = bed_columns,
+                             dtype ={'chrom':object}, skiprows=job_index*size_of_each_job,
+                             nrows= ((job_index+1)*size_of_each_job)-(job_index*size_of_each_job) )
+'''
+#read in regions to consider
+regions = pd.read_csv(regions_file, delimiter = '\t', header = None, names = bed_columns, dtype ={'chrom':object})
 #with this calculation some few number of jobs will have empty regions to work with
 #after the following slicing operation. that's ok. they will save empty dictionaries,
 #but I will have a round number of jobs to handle
-regions =   regions[job_index*size_of_each_job:(job_index+1)*size_of_each_job]
+regions = regions[job_index*size_of_each_job:(job_index+1)*size_of_each_job]
+'''
 
-#read in the file that contains all the substitutions
-snps = pd.read_csv(snp_file, delimiter = '\t', header = None, names = ['chrom','chrom_start','ref','alt','alt2','id','freq'], dtype ={'chrom':object})
-#snps.sort_values(['chrom','chrom_start'],ascending=[1,1], inplace=True)
-#snps.reset_index(drop=True,inplace=True)
 #subset of snps that this job needs to consider:
 #do this slicing if regions dataframe is not empty
 if not regions.empty:
@@ -136,9 +171,13 @@ if not regions.empty:
     slice_end_chrom = regions.tail(1).chrom.iloc[0]
     slice_start_chrom_start = regions.head(1).chrom_start.iloc[0]
     slice_end_chrom_end = regions.tail(1).chrom_end.iloc[0]
-    slice_start_index = snps[(snps.chrom == slice_start_chrom)&(snps.chrom_start >= slice_start_chrom_start)].head(1).index[0]
-    slice_end_index = snps[(snps.chrom == slice_end_chrom)&(snps.chrom_start < slice_end_chrom_end)].tail(1).index[0] + 1
-    snps = snps[slice_start_index : slice_end_index ]
+    slice_start_index, slice_end_index = snp_slice_indices(snp_file,slice_start_chrom, slice_end_chrom,
+                                                           slice_start_chrom_start, slice_end_chrom_end)
+    # read in the file that contains all the substitutions (only a slice of it that is needed)
+    snps = pd.read_csv(snp_file, delimiter='\t', header=None,
+                              names=['chrom', 'chrom_start', 'ref', 'alt', 'alt2', 'id', 'freq'],
+                              dtype={'chrom': object}, skiprows=slice_start_index,
+                              nrows=slice_end_index - slice_start_index)
 
 exception_counter = 0
 #for each region in regions from bed file:
