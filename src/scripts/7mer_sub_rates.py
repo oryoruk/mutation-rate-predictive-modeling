@@ -1,7 +1,7 @@
 import sys
-sys.path.append("/project/voight_subrate/avarun/Research/mutation_rate")
-from modules import *
-from function_wrapper import *
+#sys.path.append("/project/voight_subrate/avarun/Research/mutation_rate")
+#from modules import *
+#from function_wrapper import *
 import pandas as pd
 import itertools
 import pickle
