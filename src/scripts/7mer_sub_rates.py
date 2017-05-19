@@ -24,20 +24,6 @@ def get_seq_context_variant(chr_name,position,before,after):
 #     #return ''.join(str_around)
 #     return ''.join(str_around)
 
-def get_seq_context_variant(chr_name,position,before,after):
-    #Chr_name: chromosome name
-    #position: position of variant
-    #before after: nucleotides before or after the variant
-    files = file_handles('/project/voight_datasets/hg19')
-    chr_name = str(chr_name)
-    position = int(position)
-    before = int(before)
-    after = int(after)
-    str_around = files.fetch_str_var(chr_name,position,before,after) #string around the variant including it
-    #print "sequence context "+str(before)+" basepairs before and "+str(after)+" after the variant including the middle position"+''.join(str_around)
-    #return ''.join(str_around)
-    return ''.join(str_around)
-
 def reverse_complement(seq):
     complement_code = dict( zip( "ATCGNatcgn" , "TAGCNtagcn" ) )
     #return "".join( complement_code[nuc] for nuc in reversed(seq) )
