@@ -5,12 +5,30 @@ from function_wrapper import *
 import pandas as pd
 import itertools
 import pickle
+from Bio import SeqIO
+
+def get_seq_context_variant(chr_name,position,before,after):
+    return str(ref_genome_chr.seq)[position - (before+1):position + after].upper()
+
+# def get_seq_context_variant(chr_name,position,before,after):
+#     #Chr_name: chromosome name
+#     #position: position of variant
+#     #before after: nucleotides before or after the variant
+#     files = file_handles('/project/voight_datasets/hg19')
+#     chr_name = str(chr_name)
+#     position = int(position)
+#     before = int(before)
+#     after = int(after)
+#     str_around = files.fetch_str_var(chr_name,position,before,after) #string around the variant including it
+#     #print "sequence context "+str(before)+" basepairs before and "+str(after)+" after the variant including the middle position"+''.join(str_around)
+#     #return ''.join(str_around)
+#     return ''.join(str_around)
 
 def get_seq_context_variant(chr_name,position,before,after):
     #Chr_name: chromosome name
     #position: position of variant
     #before after: nucleotides before or after the variant
-    files = file_handles("/project/voight_subrate/avarun/Research/fasta_file_hg19")
+    files = file_handles('/project/voight_datasets/hg19')
     chr_name = str(chr_name)
     position = int(position)
     before = int(before)
@@ -19,23 +37,6 @@ def get_seq_context_variant(chr_name,position,before,after):
     #print "sequence context "+str(before)+" basepairs before and "+str(after)+" after the variant including the middle position"+''.join(str_around)
     #return ''.join(str_around)
     return ''.join(str_around)
-
-def get_seq_context_interval(chr_name,start_p,end_p,before_after):
-    #Chr_name: chromosome name
-    #start_p: start position of interval
-    #end_p: end postion of interval
-    #before_after: nucleotides before or after the start/end (needed for padding)
-    files = file_handles("/project/voight_subrate/avarun/Research/fasta_file_hg19")
-    chr_name = str(chr_name)
-    start_p = int(start_p)
-    end_p = int(end_p)
-    before_after = int(before_after)
-    acceptable_chr_name = ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","X"]
-    if chr_name in acceptable_chr_name:
-        seq = ''.join(files.get_string(chr_name, start_p, end_p, before_after, before_after))
-        return seq
-    else:
-        print "Chromosome entered is not valid"
 
 def reverse_complement(seq):
     complement_code = dict( zip( "ATCGNatcgn" , "TAGCNtagcn" ) )
@@ -112,18 +113,24 @@ def file_len(fname):
 regions_file_name = sys.argv[1]
 snp_file_name = sys.argv[2]
 output_dir = sys.argv[3]
-total_no_of_jobs = int(sys.argv[4])
-job_index = int(sys.argv[5])
+chrom = str(sys.argv[4])
+#total_no_of_jobs = int(sys.argv[4])
+#job_index = int(sys.argv[5])
 
 #hardcoded size for the sequence context
 context_size = 7
 before = (context_size-1)/2
 after = (context_size-1)/2
+ref_genome_chr = SeqIO.read('/project/voight_datasets/hg19/chr'+chrom+'.fa', "fasta")
+
+
 
 #cpg_file = './../../data/formatted_regions_sites/reg_whole__acc_nc_auto_cpg.bed'
 regions_file = './../../data/formatted_regions_sites/' + regions_file_name
-snp_file = './../../data/mutation_datasets/snp/' + snp_file_name
-output_file = output_dir + str(job_index)
+snp_file = './../../data/mutation_datasets/snp/1kg_phaseIII/' + snp_file_name
+#output_file = output_dir + str(job_index)
+output_file = output_dir + chrom
+
 #output_file = './../../output/initial_analysis/cpg_ct/' + str(job_index)
 #output_file = './../../output/initial_analysis/cpg_ct_rt/' + save_file_name
 
@@ -146,15 +153,19 @@ for sub in subs:
 
 
 
+bed_columns = ['chrom', 'chrom_start', 'chrom_end']
 
+'''
 #subset of regions that this job needs to consider:
 reg_len = file_len(regions_file)
 size_of_each_job =  reg_len / total_no_of_jobs + 1
 #read in regions to consider
-bed_columns = ['chrom','chrom_start','chrom_end']
+
 regions = pd.read_csv(regions_file, delimiter = '\t', header = None, names = bed_columns,
                              dtype ={'chrom':object}, skiprows=job_index*size_of_each_job,
                              nrows= ((job_index+1)*size_of_each_job)-(job_index*size_of_each_job) )
+'''
+
 '''
 #read in regions to consider
 regions = pd.read_csv(regions_file, delimiter = '\t', header = None, names = bed_columns, dtype ={'chrom':object})
@@ -163,6 +174,11 @@ regions = pd.read_csv(regions_file, delimiter = '\t', header = None, names = bed
 #but I will have a round number of jobs to handle
 regions = regions[job_index*size_of_each_job:(job_index+1)*size_of_each_job]
 '''
+
+regions = pd.read_csv(regions_file, delimiter='\t', header=None, names=bed_columns,
+                      dtype={'chrom': object})
+regions = regions[regions.chrom == chrom]
+
 
 #subset of snps that this job needs to consider:
 #do this slicing if regions dataframe is not empty
@@ -175,8 +191,10 @@ if not regions.empty:
                                                            slice_start_chrom_start, slice_end_chrom_end)
     # read in the file that contains all the substitutions (only a slice of it that is needed)
     snps = pd.read_csv(snp_file, delimiter='\t', header=None,
-                              names=['chrom', 'chrom_start', 'ref', 'alt', 'alt2', 'id', 'freq'],
-                              dtype={'chrom': object}, skiprows=slice_start_index,
+                              #names=['chrom', 'chrom_start', 'ref', 'alt', 'alt2', 'id', 'freq'],
+                            #changed this line to accomodate phase III data files I created:
+                            names=['chrom', 'chrom_start', 'ref', 'alt'],
+                       dtype={'chrom': object}, skiprows=slice_start_index,
                               nrows=slice_end_index - slice_start_index)
 
 exception_counter = 0
