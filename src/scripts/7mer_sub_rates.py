@@ -6,10 +6,9 @@ import pandas as pd
 import itertools
 import pickle
 from Bio import SeqIO
+from bisect import bisect_left
 
-def get_seq_context_variant(chr_name,position,before,after):
-    return str(ref_genome_chr.seq)[position - (before+1):position + after].upper()
-
+# OLD VERSION FROM VARUN WITH I/O FOR EACH LOOKUP
 # def get_seq_context_variant(chr_name,position,before,after):
 #     #Chr_name: chromosome name
 #     #position: position of variant
@@ -24,23 +23,48 @@ def get_seq_context_variant(chr_name,position,before,after):
 #     #return ''.join(str_around)
 #     return ''.join(str_around)
 
+# NEW VERSION USING BIOPYTHON
+def get_seq_context_variant(chr_name,position,before,after):
+    return str(ref_genome_chr.seq)[position - (before+1):position + after].upper()
+
 def reverse_complement(seq):
     complement_code = dict( zip( "ATCGNatcgn" , "TAGCNtagcn" ) )
     #return "".join( complement_code[nuc] for nuc in reversed(seq) )
     return "".join( complement_code[nuc] for nuc in seq[::-1] )
 
-def check_sub(snps,chrom,chrom_start,reverse_strand):
-    snp_at_site = snps[(snps.chrom==chrom)&(snps.chrom_start==chrom_start)]
-    if snp_at_site.empty:
+def binary_search(a, x, lo=0, hi=None):  # can't use a to specify default for hi
+    hi = hi if hi is not None else len(a)  # hi defaults to len(a)
+    pos = bisect_left(a, x, lo, hi)  # find insertion position
+    return (pos if pos != hi and a[pos] == x else -1)  # don't walk off the end
+
+# #OLD VERSION O(n) BECAUSE OF LINEAR SEARCH
+# def check_sub(snps,chrom,chrom_start,reverse_strand):
+#     snp_at_site = snps[(snps.chrom==chrom)&(snps.chrom_start==chrom_start)]
+#     if snp_at_site.empty:
+#         return (False, '')
+#     #if there is a snp:
+#     else:
+#         #return sub=True and the alt nucleotide
+#         #take the reverse complement if working on the reverse strand
+#         if reverse_strand:
+#             return (True, reverse_complement(snp_at_site.iloc[0].alt) )
+#         else:
+#             return (True, snp_at_site.iloc[0].alt )
+
+#O(log(n)) VERSION
+# #assumes snps contains data in only 1 chromosome
+def check_sub(snps,chrom_start,reverse_strand):
+    sub_index = binary_search(snps.chrom_start, chrom_start)
+    if sub_index == -1:
         return (False, '')
     #if there is a snp:
     else:
         #return sub=True and the alt nucleotide
         #take the reverse complement if working on the reverse strand
         if reverse_strand:
-            return (True, reverse_complement(snp_at_site.iloc[0].alt) )
+            return (True, reverse_complement(snps.alt[sub_index]) )
         else:
-            return (True, snp_at_site.iloc[0].alt )
+            return (True, snps.alt[sub_index] )
 
 def list_without_item(full_list,item):
     return [x for x in full_list if x != item]
@@ -93,7 +117,6 @@ def file_len(fname):
         for i, l in enumerate(f):
             pass
     return i + 1
-
 
 #taking inputs: folders/files and total number of jobs and current jobs index
 regions_file_name = sys.argv[1]
@@ -213,7 +236,7 @@ for i, region in regions.iterrows():
             for nuc  in list_without_item(nucs, site_nuc):
                 sub_rates_dct[site_context+site_context[:3]+nuc+site_context[4:]][0] += 1
             #look up if there is a sub in this site
-            sub, alt = check_sub(snps,region.chrom,site, reverse_strand)
+            sub, alt = check_sub(snps, site, reverse_strand)
             #if there is a substitution at this site, increment corresponding sub count
             if sub:
                 sub_rates_dct[site_context+site_context[:3]+alt+site_context[4:]][1] += 1
